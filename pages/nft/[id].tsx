@@ -81,6 +81,7 @@ const NFTDropPage = () => {
               layout="fill"
               objectFit="cover"
               priority
+              className="rounded-lg"
             />
           </div>
           <h1 className="my-4 text-center text-xl font-bold text-slate-800 lg:text-3xl">
