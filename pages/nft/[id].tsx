@@ -1,17 +1,21 @@
 import { useAddress, useDisconnect, useMetamask } from '@thirdweb-dev/react'
+import { GetServerSideProps } from 'next'
 import Head from 'next/head'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
 import { IoHomeOutline } from 'react-icons/io5'
+import { sanityClient, urlFor } from '../../sanity'
+import { Collection } from '../../typings'
 
-const NFTDropPage = () => {
+interface NFTPageInterface {
+  collection: Collection
+}
+
+const NFTDropPage = ({ collection }: NFTPageInterface) => {
   const connectWithMetamask = useMetamask()
   const address = useAddress()
   const disconnect = useDisconnect()
-  const router = useRouter()
-
-  const { id } = router.query
 
   return (
     <div className="flex h-screen flex-col lg:grid lg:grid-cols-10">
@@ -24,7 +28,7 @@ const NFTDropPage = () => {
         <div className="rounded-lg bg-gradient-to-br from-yellow-400 to-cyan-700 p-2">
           <div className="relative h-40 w-40 lg:h-80 lg:w-64 xl:h-96 xl:w-72">
             <Image
-              src={`/images/${id}.png`}
+              src={urlFor(collection.previewImage).url()}
               layout="fill"
               objectFit="cover"
               priority
@@ -34,10 +38,10 @@ const NFTDropPage = () => {
         </div>
         <div className="mt-4 space-y-1">
           <h1 className="text-center text-2xl font-bold capitalize text-white lg:text-3xl">
-            {id?.toString().replace(/-/g, ' ')}s
+            {collection.nftCollectionName}
           </h1>
           <h2 className="text-center text-sm text-gray-300 lg:text-base">
-            A collection of Apes who live & breathe React
+            {collection.description}
           </h2>
         </div>
       </div>
@@ -77,7 +81,7 @@ const NFTDropPage = () => {
         <main className="flex flex-1 flex-col items-center lg:justify-center">
           <div className="relative mt-12 h-72 w-72 rounded-lg border-4 border-rose-400 shadow-lg shadow-rose-300 lg:h-36 lg:w-80">
             <Image
-              src="https://links.papareact.com/bdy"
+              src={urlFor(collection.mainImage).url()}
               layout="fill"
               objectFit="cover"
               priority
@@ -85,7 +89,7 @@ const NFTDropPage = () => {
             />
           </div>
           <h1 className="my-4 text-center text-xl font-bold text-slate-800 lg:text-3xl">
-            TT Ape Coding Club | NFT Drop
+            {collection.title}
           </h1>
           <p className="text-sm text-green-500">13 / 21 NFT's claimed</p>
         </main>
@@ -102,3 +106,46 @@ const NFTDropPage = () => {
 }
 
 export default NFTDropPage
+
+export const getServerSideProps: GetServerSideProps = async ({ params }) => {
+  const query = `*[_type == "collection" && slug.current == $id][0]{
+    _id,
+    title,
+    address,
+    description,
+    nftCollectionName,
+    mainImage {
+      asset,
+    },
+    previewImage {
+      asset,
+    },
+    slug {
+      current,
+    },
+    creator-> {
+      _id,
+      name,
+      address,
+      slug {
+        current
+      },
+    },
+  }`
+
+  const collection = await sanityClient.fetch(query, {
+    id: params?.id,
+  })
+
+  if (!collection) {
+    return {
+      notFound: true,
+    }
+  }
+
+  return {
+    props: {
+      collection,
+    },
+  }
+}

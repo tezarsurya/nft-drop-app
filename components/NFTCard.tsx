@@ -4,16 +4,17 @@ import Link from 'next/link'
 interface NFTCardInterface {
   title: string
   description: string
-  id: string
+  slug: string
+  url: string
 }
 
-const NFTCard = ({ title, description, id }: NFTCardInterface) => {
+const NFTCard = ({ title, description, slug, url }: NFTCardInterface) => {
   return (
-    <Link href={`/nft/${id}`}>
+    <Link href={`/nft/${slug}`}>
       <div className="flex h-96 cursor-pointer flex-col rounded-lg border-2 transition-all ease-in-out hover:shadow-md hover:shadow-rose-300">
         <div className="relative h-3/4 w-full">
           <Image
-            src={`/images/${id}.png`}
+            src={url}
             layout="fill"
             alt={title}
             objectFit="cover"
